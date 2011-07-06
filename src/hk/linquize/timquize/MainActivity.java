@@ -1,7 +1,7 @@
 package hk.linquize.timquize;
 
-import java.text.*;
 import java.util.*;
+import java.util.Map.Entry;
 
 import android.app.*;
 import android.content.*;
@@ -14,6 +14,7 @@ import android.widget.*;
 public class MainActivity extends Activity {
 	ToggleButton ynbOffline, ynbOnline;
 	Button btnOffline, btnOnline, btnOfflineNow, btnOnlineNow;
+	TextView lblPastTime, lblComingTime;
 	AlarmList moAlarms;
 	Calendar moCalOffline, moCalOnline;
 	SharedPreferences moPref;
@@ -60,6 +61,9 @@ public class MainActivity extends Activity {
         
         btnOnlineNow = (Button)findViewById(R.id.btnOnlineNow);
         btnOnlineNow.setOnClickListener(btnOnlineNow_onClick);
+        
+        lblPastTime = (TextView)findViewById(R.id.lblPastTime);
+        lblComingTime = (TextView)findViewById(R.id.lblComingTime);
     }
     
     CompoundButton.OnCheckedChangeListener ynbOffOn_onCheckedChange = new CompoundButton.OnCheckedChangeListener() {
@@ -114,7 +118,6 @@ public class MainActivity extends Activity {
     
 
 	AlarmList.OnAlarmListener moAlarmListener = new AlarmList.OnAlarmListener() {		
-		@Override
 		public void onAlarm(String asName) {
 			if ("offline".equals(asName)) {
 	    		enableAirplaneMode();
@@ -125,11 +128,23 @@ public class MainActivity extends Activity {
 	    		updateAlarmWithinOneDay(moCalOnline, "online", moCalOnline.get(Calendar.HOUR_OF_DAY), moCalOnline.get(Calendar.MINUTE));
 	    	}
 		}
+		
+		public void onCurrentAlarmChanged(String asName) {
+			updatePastComing();
+		}
 	};
 	
     @Override
     protected void onResume() {
     	super.onResume();
+    }
+    
+    void updatePastComing() {
+    	Entry<String, Long> loPast = moAlarms.getPrevious();
+		lblPastTime.setText(loPast.getKey() + ": " + DateUtil.FormatLocalDateTime(loPast.getValue()));
+		
+		Entry<String, Long> loCurrent = moAlarms.getCurrent();
+		lblComingTime.setText(loCurrent.getKey() + ": " + DateUtil.FormatLocalDateTime(loCurrent.getValue()));
     }
     
     void enableAirplaneMode() {
@@ -173,7 +188,7 @@ public class MainActivity extends Activity {
     
     void updateAlarmWithinOneDay(Calendar aoCalendar, String asName, int aiHourOfDay, int aiMinute) {
     	CalendarUtil.setComingTimeOfDay(aoCalendar, aiHourOfDay, aiMinute);
-    	Log.d(this.getClass().getSimpleName(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS").format(aoCalendar.getTime()));
+    	Log.d(this.getClass().getSimpleName(), DateUtil.FormatLocalDateTimePrecise(aoCalendar.getTime()));
     	moAlarms.set(asName, aoCalendar);
     }
     

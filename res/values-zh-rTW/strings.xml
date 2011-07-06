@@ -8,4 +8,6 @@
     <string name="goOffline">現在離線！</string>
     <string name="goOnline">現在上線！</string>
     <string name="manual">人手</string>
+    <string name="lblPastAction">過去動作</string>
+    <string name="lblComingAction">將會動作</string>
 </resources>

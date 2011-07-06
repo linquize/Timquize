@@ -8,4 +8,6 @@
     <string name="goOffline">Now goes offline!</string>
     <string name="goOnline">Now goes online!</string>
     <string name="manual">Manual</string>
+    <string name="lblPastAction">Past Action</string>
+    <string name="lblComingAction">Coming Action</string>
 </resources>

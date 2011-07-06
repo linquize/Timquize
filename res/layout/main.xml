@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent">
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
 	<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/hello" />
 	<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
 	    <TextView android:layout_width="wrap_content" android:id="@+id/lblOffTime" android:layout_height="wrap_content" android:text="@string/lblOffTime" />
@@ -12,6 +11,14 @@
 	    <TextView android:id="@+id/lblOnTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/lblOnTime" />
 	    <ToggleButton android:text="On" android:id="@+id/ynbOnline" android:layout_width="wrap_content" android:layout_height="wrap_content" />
 	    <Button android:text="    ...    " android:id="@+id/btnOnline" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-	    <Button android:text="Manual" android:id="@+id/btnOnlineNow" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+	    <Button android:id="@+id/btnOnlineNow" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/manual"/>
+	</LinearLayout>
+	<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/linearLayout1" android:layout_marginTop="20px">
+		<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/lblPastAction" android:text="@string/lblPastAction" />
+		<TextView android:id="@+id/lblPastTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="10px" android:text="(N/A)" />
+	</LinearLayout>
+	<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/linearLayout2">
+		<TextView android:layout_width="wrap_content" android:id="@+id/lblComingAction" android:layout_height="wrap_content" android:text="@string/lblComingAction" />
+		<TextView android:id="@+id/lblComingTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="10px" android:text="(N/A)" />
 	</LinearLayout>
 </LinearLayout>
