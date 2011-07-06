@@ -24,7 +24,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         initializeComponent();
         
-        moAlarms = new AlarmList(this); 
+        moAlarms = new AlarmList(this, moAlarmListener); 
         moPref = getSharedPreferences("Timquize", Context.MODE_PRIVATE);
         int liOfflineMinute = moPref.getInt("offlineTime", 23 * 60);
         moCalOffline = CalendarUtil.setTimeOfDay(
@@ -112,19 +112,21 @@ public class MainActivity extends Activity {
 		}
     };
     
-    protected void onNewIntent(Intent aoIntent) {
-    	String lsName = aoIntent.getStringExtra("name");
-    	if (lsName == null) return;
-    	if (lsName.equals("offline")) {
-    		enableAirplaneMode();
-    		updateAlarmWithinOneDay(moCalOffline, "offline", moCalOffline.get(Calendar.HOUR_OF_DAY), moCalOffline.get(Calendar.MINUTE));
-    	}
-    	else if (lsName.equals("online")) {
-    		disableAirplaneMode();
-    		updateAlarmWithinOneDay(moCalOnline, "online", moCalOnline.get(Calendar.HOUR_OF_DAY), moCalOnline.get(Calendar.MINUTE));
-    	}
-    }
 
+	AlarmList.OnAlarmListener moAlarmListener = new AlarmList.OnAlarmListener() {		
+		@Override
+		public void onAlarm(String asName) {
+			if ("offline".equals(asName)) {
+	    		enableAirplaneMode();
+	    		updateAlarmWithinOneDay(moCalOffline, "offline", moCalOffline.get(Calendar.HOUR_OF_DAY), moCalOffline.get(Calendar.MINUTE));
+	    	}
+	    	else if ("online".equals(asName)) {
+	    		disableAirplaneMode();
+	    		updateAlarmWithinOneDay(moCalOnline, "online", moCalOnline.get(Calendar.HOUR_OF_DAY), moCalOnline.get(Calendar.MINUTE));
+	    	}
+		}
+	};
+	
     @Override
     protected void onResume() {
     	super.onResume();
