@@ -1,5 +1,6 @@
 package hk.linquize.timquize;
 
+import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -23,6 +24,7 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WriteLog("onCreate");
         initializeComponent();
         
         moAlarms = new AlarmList(this, moAlarmListener); 
@@ -38,6 +40,37 @@ public class MainActivity extends Activity {
         changeAlarmTime(false, true, moCalOffline.get(Calendar.HOUR_OF_DAY), moCalOffline.get(Calendar.MINUTE));
         changeAlarmTime(false, false, moCalOnline.get(Calendar.HOUR_OF_DAY), moCalOnline.get(Calendar.MINUTE));
     }
+    
+    @Override
+    protected void onStart() {
+    	super.onStart();
+    	WriteLog("onStart");
+    }
+	
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	WriteLog("onResume");
+    }
+    
+    @Override
+    protected void onPause() {
+    	super.onPause();
+    	WriteLog("onPause");
+    }
+	
+    @Override
+    protected void onStop() {
+    	super.onStop();
+    	WriteLog("onStop");
+    }
+	
+    @Override
+    protected void onDestroy() {
+    	super.onDestroy();
+    	WriteLog("onDestroy");
+    }
+    
     
     void initializeComponent() {
         setContentView(R.layout.main);
@@ -133,11 +166,6 @@ public class MainActivity extends Activity {
 			updatePastComing();
 		}
 	};
-	
-    @Override
-    protected void onResume() {
-    	super.onResume();
-    }
     
     void updatePastComing() {
     	Entry<String, Long> loPast = moAlarms.getPrevious();
@@ -202,5 +230,17 @@ public class MainActivity extends Activity {
     			Toast.makeText(MainActivity.this, asText, Toast.LENGTH_SHORT).show();
     		}
     	});
+    }
+    
+    void WriteLog(String asText) {
+    	File sdCard = Environment.getExternalStorageDirectory();
+    	File dir = new File (sdCard.getAbsolutePath() + "/timquize");
+    	dir.mkdirs();
+    	try {
+			FileUtil.appendAllText(dir.getAbsolutePath() + "/log.txt", 
+					DateUtil.FormatLocalDateTimePrecise(Calendar.getInstance().getTime()) + "\t" + asText + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 }
