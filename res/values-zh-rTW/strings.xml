@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">這是 Timquize!</string>
+    <string name="app_name">Timquize</string>
+    <string name="lblOffTime">離線時間</string>
+    <string name="lblOnTime">上線時間</string>
+    <string name="after">之後</string>
+    <string name="goOffline">現在離線！</string>
+    <string name="goOnline">現在上線！</string>
+    <string name="manual">人手</string>
+</resources>

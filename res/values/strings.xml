@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">This is Timquize!</string>
+    <string name="app_name">Timquize</string>
+    <string name="lblOffTime">Offline Time</string>
+    <string name="lblOnTime">Online Time</string>
+    <string name="after">after</string>
+    <string name="goOffline">Now goes offline!</string>
+    <string name="goOnline">Now goes online!</string>
+    <string name="manual">Manual</string>
+</resources>
