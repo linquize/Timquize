@@ -2,13 +2,14 @@ package hk.linquize.timquize;
 
 import java.io.*;
 import java.util.*;
-import java.util.Map.Entry;
+import java.util.Map.*;
 
 import android.app.*;
 import android.content.*;
+import android.content.pm.PackageManager.*;
+import android.media.MediaPlayer;
 import android.os.*;
-import android.provider.*;
-import android.util.*;
+import android.provider.Settings;
 import android.view.*;
 import android.widget.*;
 
@@ -16,61 +17,53 @@ public class MainActivity extends Activity {
 	ToggleButton ynbOffline, ynbOnline;
 	Button btnOffline, btnOnline, btnOfflineNow, btnOnlineNow;
 	TextView lblPastTime, lblComingTime;
-	AlarmList moAlarms;
-	Calendar moCalOffline, moCalOnline;
-	SharedPreferences moPref;
+	String msVersion;
+	AlarmService moService;
+	TimeData moOfflineTime, moOnlineTime;
+
+	static final String ALARM_SERVICE = "hk.linquize.timquize.ALARM_SERVICE";
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WriteLog("onCreate");
+        writeLog("act_onCreate");
         initializeComponent();
         
-        moAlarms = new AlarmList(this, moAlarmListener); 
-        moPref = getSharedPreferences("Timquize", Context.MODE_PRIVATE);
-        int liOfflineMinute = moPref.getInt("offlineTime", 23 * 60);
-        moCalOffline = CalendarUtil.setTimeOfDay(
-    		CalendarUtil.setAsToday(Calendar.getInstance()), liOfflineMinute / 60, liOfflineMinute % 60);
-        int liOnlineMinute = moPref.getInt("onlineTime", 8 * 60);
-        moCalOnline = CalendarUtil.setTimeOfDay(
-    		CalendarUtil.setAsToday(Calendar.getInstance()), liOnlineMinute / 60, liOnlineMinute % 60);
-        ynbOffline.setChecked(moPref.getBoolean("offlineEnabled", false));
-        ynbOnline.setChecked(moPref.getBoolean("offlineEnabled", false));
-        changeAlarmTime(false, true, moCalOffline.get(Calendar.HOUR_OF_DAY), moCalOffline.get(Calendar.MINUTE));
-        changeAlarmTime(false, false, moCalOnline.get(Calendar.HOUR_OF_DAY), moCalOnline.get(Calendar.MINUTE));
+        startService(new Intent(this, AlarmService.class));
+        bindService(new Intent(ALARM_SERVICE), moConnection, Context.BIND_AUTO_CREATE);
     }
     
     @Override
     protected void onStart() {
     	super.onStart();
-    	WriteLog("onStart");
+    	writeLog("act_onStart");
     }
 	
     @Override
     protected void onResume() {
     	super.onResume();
-    	WriteLog("onResume");
+    	writeLog("act_onResume");
     }
     
     @Override
     protected void onPause() {
     	super.onPause();
-    	WriteLog("onPause");
+    	writeLog("act_onPause");
     }
 	
     @Override
     protected void onStop() {
     	super.onStop();
-    	WriteLog("onStop");
+    	writeLog("act_onStop");
     }
 	
     @Override
     protected void onDestroy() {
     	super.onDestroy();
-    	WriteLog("onDestroy");
+    	writeLog("act_onDestroy");
+    	unbindService(null);
     }
-    
     
     void initializeComponent() {
         setContentView(R.layout.main);
@@ -102,63 +95,75 @@ public class MainActivity extends Activity {
     CompoundButton.OnCheckedChangeListener ynbOffOn_onCheckedChange = new CompoundButton.OnCheckedChangeListener() {
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			boolean lbIsOffline = buttonView == ynbOffline;
+			TimeData loTD = lbIsOffline ? moOfflineTime : moOnlineTime;
+			loTD.setEnabled(isChecked);
+			if (lbIsOffline)
+				moService.changeOfflineTime(loTD);
+			else
+				moService.changeOnlineTime(loTD);
 			Button loButton = lbIsOffline ? btnOffline : btnOnline;
-			Calendar loCalendar = lbIsOffline ? moCalOffline : moCalOnline;
-			String lsName = lbIsOffline ? "offline" : "online";
-			
 			loButton.setEnabled(isChecked);
-			if (isChecked) {
-				int liHourOfDay = loCalendar.get(Calendar.HOUR_OF_DAY);
-				int liMinute = loCalendar.get(Calendar.MINUTE);
-				SharedPreferences.Editor loEditor = moPref.edit();
-				loEditor.putBoolean(lbIsOffline ? "offlineEnabled" : "onlineEnabled", true);
-				loEditor.commit();
-				updateAlarmWithinOneDay(CalendarUtil.copyFromNow(loCalendar), lsName, liHourOfDay, liMinute);
-			}
-			else {
-				SharedPreferences.Editor loEditor = moPref.edit();
-				loEditor.putBoolean(lbIsOffline ? "offlineEnabled" : "onlineEnabled", false);
-				loEditor.commit();
-				moAlarms.remove(lsName);
-			}
 		}
     };
     
     View.OnClickListener btnOffOn_onClick = new View.OnClickListener() {
 		public void onClick(final View v) {
 			final boolean lbIsOffline = v == btnOffline;
-			final Calendar loCalendar = lbIsOffline ? moCalOffline : moCalOnline;
+			final TimeData loTD = lbIsOffline ? moOfflineTime : moOnlineTime;
 			TimePickerDialog loDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
 		        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-		        	changeAlarmTime(true, lbIsOffline, hourOfDay, minute);
+		        	loTD.setHourOfDay(hourOfDay);
+		        	loTD.setMinute(minute);
+		        	((Button)v).setText(String.format("%1$02d:%2$02d", hourOfDay, minute));
+					if (lbIsOffline)
+						moService.changeOfflineTime(loTD);
+					else
+						moService.changeOnlineTime(loTD);
 		        }
-		    }, loCalendar.get(Calendar.HOUR_OF_DAY), loCalendar.get(Calendar.MINUTE), true);
+		    }, loTD.getHourOfDay(), loTD.getMinute(), true);
 			loDialog.show();
 		}
     };
     
     View.OnClickListener btnOfflineNow_onClick = new View.OnClickListener() {
 		public void onClick(View v) {
-			enableAirplaneMode();
+			moService.enableAirplaneMode();
 		}
     };
     
     View.OnClickListener btnOnlineNow_onClick = new View.OnClickListener() {
 		public void onClick(View v) {
-			disableAirplaneMode();
+			moService.disableAirplaneMode();
+		}
+    };
+    	
+	ServiceConnection moConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+        	AlarmService.AlarmBinder loBinder = (AlarmService.AlarmBinder)service;
+            moService = loBinder.getService();
+            moOfflineTime = moService.getOfflineTime();
+            moOnlineTime = moService.getOnlineTime();
+            ynbOffline.setChecked(moOfflineTime.isEnabled());
+            ynbOnline.setChecked(moOnlineTime.isEnabled());
+            btnOffline.setText(String.format("%1$02d:%2$02d", moOfflineTime.getHourOfDay(), moOfflineTime.getMinute()));
+            btnOnline.setText(String.format("%1$02d:%2$02d", moOnlineTime.getHourOfDay(), moOnlineTime.getMinute()));
+            moService.addAlarmListener(moAlarmListener);
+            updatePastComing();
+        }
+
+		public void onServiceDisconnected(ComponentName name) {
+			moService.removeAlarmListener(moAlarmListener);
+			moService = null;
 		}
     };
     
-
-	AlarmList.OnAlarmListener moAlarmListener = new AlarmList.OnAlarmListener() {		
+    AlarmList.OnAlarmListener moAlarmListener = new AlarmList.OnAlarmListener() {		
 		public void onAlarm(String asName) {
 			if ("offline".equals(asName)) {
-	    		enableAirplaneMode();
-	    		updateAlarmWithinOneDay(moCalOffline, "offline", moCalOffline.get(Calendar.HOUR_OF_DAY), moCalOffline.get(Calendar.MINUTE));
+				playSound();
 	    	}
 	    	else if ("online".equals(asName)) {
-	    		disableAirplaneMode();
-	    		updateAlarmWithinOneDay(moCalOnline, "online", moCalOnline.get(Calendar.HOUR_OF_DAY), moCalOnline.get(Calendar.MINUTE));
+	    		playSound();
 	    	}
 		}
 		
@@ -166,78 +171,46 @@ public class MainActivity extends Activity {
 			updatePastComing();
 		}
 	};
-    
-    void updatePastComing() {
-    	Entry<String, Long> loPast = moAlarms.getPrevious();
-		lblPastTime.setText(loPast.getKey() + ": " + DateUtil.FormatLocalDateTime(loPast.getValue()));
-		
-		Entry<String, Long> loCurrent = moAlarms.getCurrent();
-		lblComingTime.setText(loCurrent.getKey() + ": " + DateUtil.FormatLocalDateTime(loCurrent.getValue()));
-    }
-    
-    void enableAirplaneMode() {
-		Settings.System.putInt(getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 1);
-		Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-		intent.putExtra("state", true);
-		sendBroadcast(intent);
-		showToastShortly(getString(R.string.goOffline));
-    }
-    
-    void disableAirplaneMode() {
-		Settings.System.putInt(getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 0);
-		Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-		intent.putExtra("state", false);
-		sendBroadcast(intent);
-		showToastShortly(getString(R.string.goOnline));
+	
+	void playSound() {
+		MediaPlayer loPlayer = MediaPlayer.create(MainActivity.this, Settings.System.DEFAULT_NOTIFICATION_URI);
+		loPlayer.start();
 	}
     
-    void changeAlarmTime(boolean abIsUpdate, boolean abIsOffline, int aiHourOfDay, int aiMinute) {
-    	Button loButton = abIsOffline ? btnOffline : btnOnline;
-    	ToggleButton loToggle = abIsOffline ? ynbOffline : ynbOnline;
-    	Calendar loCalendar = abIsOffline ? moCalOffline : moCalOnline;
-    	loButton.setText(String.format("%1$02d:%2$02d", aiHourOfDay, aiMinute));
-    	
-    	if (abIsUpdate) {
-			SharedPreferences.Editor loEditor = moPref.edit();
-			loEditor.putInt(abIsOffline ? "offlineTime" : "onlineTime", aiHourOfDay * 60 + aiMinute);
-			loEditor.commit();
-    	
-	    	if (loToggle.isChecked()) {
-		    	int liMinutes = CalendarUtil.diffMinuteOfDay(aiHourOfDay, aiMinute, Calendar.getInstance());
-				String lsText = String.format("%1$s %2$02d:%3$02d %4$s", 
-					getString(abIsOffline ? R.string.lblOffTime : R.string.lblOnTime),
-					liMinutes / 60, liMinutes % 60, getString(R.string.after));
-				showToastShortly(lsText);
-				updateAlarmWithinOneDay(CalendarUtil.copyFromNow(loCalendar), 
-					abIsOffline ? "offline" : "online", aiHourOfDay, aiMinute);
-	    	}
+    void updatePastComing() {
+    	Entry<String, Long> loPast = moService.getPreviousAlarm();
+    	String lsPastValue = loPast.getKey() == null ? "(N/A)"
+    			: (getResourceStringByKey(loPast.getKey()) + ": " + DateUtil.FormatLocalDateTime(loPast.getValue()));
+		lblPastTime.setText(lsPastValue);
+		
+		Entry<String, Long> loCurrent = moService.getCurrentAlarm();
+		String lsCurrentValue = loCurrent.getKey() == null ? "(N/A)"
+				: (getResourceStringByKey(loCurrent.getKey()) + ": " + DateUtil.FormatLocalDateTime(loCurrent.getValue()));
+		lblComingTime.setText(lsCurrentValue);
+    }
+
+    String getResourceStringByKey(String asName) {
+    	return getResourceStringByName("key_" + asName);
+    }
+    
+    String getResourceStringByName(String asName) {
+    	int liId = getResources().getIdentifier(asName, "string", getPackageName());
+    	return liId == 0 ? null : getString(liId);
+    }
+    
+    void writeLog(String asText) {
+    	if (msVersion == null) {
+	        try {
+				msVersion = Integer.toString(getPackageManager().getPackageInfo(getPackageName(), 0).versionCode);
+			} catch (NameNotFoundException e) {
+				e.printStackTrace();
+			}
     	}
-    }
-    
-    void updateAlarmWithinOneDay(Calendar aoCalendar, String asName, int aiHourOfDay, int aiMinute) {
-    	CalendarUtil.setComingTimeOfDay(aoCalendar, aiHourOfDay, aiMinute);
-    	Log.d(this.getClass().getSimpleName(), DateUtil.FormatLocalDateTimePrecise(aoCalendar.getTime()));
-    	moAlarms.set(asName, aoCalendar);
-    }
-    
-    /**
-     * Cross-thread safe way to show toast shortly.
-     * @param asText
-     */
-    void showToastShortly(final String asText) {
-    	this.runOnUiThread(new Runnable() {
-    		public void run() {
-    			Toast.makeText(MainActivity.this, asText, Toast.LENGTH_SHORT).show();
-    		}
-    	});
-    }
-    
-    void WriteLog(String asText) {
     	File sdCard = Environment.getExternalStorageDirectory();
     	File dir = new File (sdCard.getAbsolutePath() + "/timquize");
     	dir.mkdirs();
     	try {
-			FileUtil.appendAllText(dir.getAbsolutePath() + "/log.txt", 
+			FileUtil.appendAllText(dir.getAbsolutePath() + "/log-" + msVersion + ".txt", 
 					DateUtil.FormatLocalDateTimePrecise(Calendar.getInstance().getTime()) + "\t" + asText + "\n");
 		} catch (IOException e) {
 			e.printStackTrace();

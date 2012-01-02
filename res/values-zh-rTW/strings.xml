@@ -10,4 +10,6 @@
     <string name="manual">人手</string>
     <string name="lblPastAction">過去動作</string>
     <string name="lblComingAction">將會動作</string>
+    <string name="key_offline">離線</string>
+    <string name="key_online">上線</string>
 </resources>

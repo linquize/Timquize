@@ -10,4 +10,6 @@
     <string name="manual">Manual</string>
     <string name="lblPastAction">Past Action</string>
     <string name="lblComingAction">Coming Action</string>
+    <string name="key_offline">Offline</string>
+    <string name="key_online">Online</string>
 </resources>

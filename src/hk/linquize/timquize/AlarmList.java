@@ -14,18 +14,18 @@ public class AlarmList {
 		public abstract void onCurrentAlarmChanged(String asName);		
 	}
 	
-	Activity moActivity;
+	Context moService;
 	OnAlarmListener moListener;
 	AlarmManager moAlarmManager;
 	Map<String, Long> mmapAlarms;
 	Entry<String, Long> mentPrevious = createDefaultEntry(), mentCurrent = createDefaultEntry();
 	
-	final String ACTION_ALARM = "hk.linquize.timquize.ALARM";
+	static final String ALARM_ACTION = "hk.linquize.timquize.ALARM_ACTION";
 	
 	BroadcastReceiver moReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-        	if (!ACTION_ALARM.equals(intent.getAction())) return;
+        	if (!ALARM_ACTION.equals(intent.getAction())) return;
             String lsName = intent.getStringExtra("name");
     		mentPrevious = cloneEntry(mentCurrent);
             remove(lsName);
@@ -34,12 +34,12 @@ public class AlarmList {
         }
 	};
 	
-	public AlarmList(Activity aoActivity, OnAlarmListener aoListener) {
-		moActivity = aoActivity;
+	public AlarmList(Context aoContext, OnAlarmListener aoListener) {
+		moService = aoContext;
 		moListener = aoListener;
-		moAlarmManager = (AlarmManager)moActivity.getSystemService(Context.ALARM_SERVICE);
+		moAlarmManager = (AlarmManager)moService.getSystemService(Context.ALARM_SERVICE);
 		mmapAlarms = new HashMap<String, Long>();
-		aoActivity.registerReceiver(moReceiver, new IntentFilter(ACTION_ALARM));
+		aoContext.registerReceiver(moReceiver, new IntentFilter(ALARM_ACTION));
 	}
 	
 	public void set(String asName, Calendar aoCalendar) {
@@ -81,18 +81,18 @@ public class AlarmList {
 	}
 	
 	void refreshAlarm(String asName, long alTime) {
-		Intent loIntent = new Intent(ACTION_ALARM);
+		Intent loIntent = new Intent(ALARM_ACTION);
 		if (asName != null) {
 			loIntent.putExtra("name", asName);
 			Log.d("refreshAlarm()", asName + ", " + DateUtil.FormatLocalDateTime(alTime));
 			mentCurrent = new SimpleEntry<String, Long>(asName, alTime);
-			PendingIntent loPendingIntent = PendingIntent.getBroadcast(moActivity, 0, loIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+			PendingIntent loPendingIntent = PendingIntent.getBroadcast(moService, 0, loIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 			moAlarmManager.set(AlarmManager.RTC, alTime, loPendingIntent);
 		}
 		else
 		{
 			mentCurrent = createDefaultEntry();
-			PendingIntent loPendingIntent = PendingIntent.getBroadcast(moActivity, 0, loIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+			PendingIntent loPendingIntent = PendingIntent.getBroadcast(moService, 0, loIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 			moAlarmManager.cancel(loPendingIntent);
 		}
 
