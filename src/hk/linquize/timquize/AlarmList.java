@@ -88,7 +88,7 @@ public class AlarmList {
 			Log.d("refreshAlarm()", asName + ", " + DateUtil.FormatLocalDateTime(alTime));
 			mentCurrent = new SimpleEntry<String, Long>(asName, alTime);
 			PendingIntent loPendingIntent = PendingIntent.getBroadcast(moService, 0, loIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-			moAlarmManager.set(AlarmManager.RTC, alTime, loPendingIntent);
+			moAlarmManager.set(AlarmManager.RTC_WAKEUP, alTime, loPendingIntent);
 		}
 		else
 		{
