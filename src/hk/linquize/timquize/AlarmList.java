@@ -6,7 +6,7 @@ import java.util.AbstractMap.*;
 
 import android.app.*;
 import android.content.*;
-import android.util.Log;
+import android.util.*;
 
 public class AlarmList {
 	public abstract static interface OnAlarmListener {
@@ -27,6 +27,7 @@ public class AlarmList {
         public void onReceive(Context context, Intent intent) {
         	if (!ALARM_ACTION.equals(intent.getAction())) return;
             String lsName = intent.getStringExtra("name");
+            writeLog("alm_Receive:" + lsName);
     		mentPrevious = cloneEntry(mentCurrent);
             remove(lsName);
             if (moListener != null)
@@ -116,5 +117,9 @@ public class AlarmList {
 	
 	static Entry<String, Long> createDefaultEntry() {
 		return new SimpleEntry<String, Long>(null, Long.MAX_VALUE);
+	}
+
+	void writeLog(String asText) {
+		FileLogger.writeLog(moService, asText);
 	}
 }

@@ -10,7 +10,7 @@ import android.content.pm.PackageManager.*;
 import android.os.*;
 
 public class FileLogger {
-	static final SimpleDateFormat soFormat = new SimpleDateFormat("yyyyMMdd HHmmss:SSS");
+	static final SimpleDateFormat soFormat = new SimpleDateFormat("yyMMdd HHmmss:SSS");
 	static String ssVersion;
 
 	public static void writeLog(Context aoContext, String asText) {
@@ -27,7 +27,7 @@ public class FileLogger {
 		dir.mkdirs();
 		try {
 			FileUtil.appendAllText(dir.getAbsolutePath() + "/log-" + ssVersion + ".txt",
-					soFormat.format(Calendar.getInstance().getTime()) + "\t" + asText + "\n");
+					soFormat.format(Calendar.getInstance().getTime()) + " " + asText + "\n");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

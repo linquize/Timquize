@@ -5,12 +5,12 @@ import java.util.Map.*;
 
 import android.app.*;
 import android.content.*;
-import android.media.MediaPlayer;
+import android.media.*;
 import android.media.MediaPlayer.*;
 import android.os.*;
 import android.provider.*;
 import android.util.*;
-import android.widget.Toast;
+import android.widget.*;
 
 public class AlarmService extends Service {
 	AlarmList moAlarms;
@@ -28,14 +28,14 @@ public class AlarmService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		writeLog("svc_onBind");
+		writeLog("svc_Bind");
 		return new AlarmBinder();
 	}
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		writeLog("svc_onCreate");
+		writeLog("svc_Create");
 
 		moAlarms = new AlarmList(this, moAlarmListener);
 		moPref = getSharedPreferences("Timquize", Context.MODE_PRIVATE);
@@ -57,18 +57,18 @@ public class AlarmService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		writeLog("svc_onDestroy");
+		writeLog("svc_Destroy");
 	}
 
 	@Override
 	public void onLowMemory() {
 		super.onLowMemory();
-		writeLog("svc_onLowMemory");
+		writeLog("svc_LowMemory");
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		writeLog("svc_onStartCommand");
+		writeLog("svc_StartCmd");
 		return super.onStartCommand(intent, flags, startId);
 	}
 

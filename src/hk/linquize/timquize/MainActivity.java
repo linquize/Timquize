@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		writeLog("act_onCreate");
+		writeLog("act_Create");
 		initializeComponent();
 
 		startService(new Intent(this, AlarmService.class));
@@ -33,31 +33,31 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		writeLog("act_onStart");
+		writeLog("act_Start");
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		writeLog("act_onResume");
+		writeLog("act_Resume");
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		writeLog("act_onPause");
+		writeLog("act_Pause");
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		writeLog("act_onStop");
+		writeLog("act_Stop");
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		writeLog("act_onDestroy");
+		writeLog("act_Destroy");
 		unbindService(moConnection);
 	}
 
