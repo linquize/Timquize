@@ -72,10 +72,16 @@ public class AlarmService extends Service {
 		return super.onStartCommand(intent, flags, startId);
 	}
 
+	private boolean isCallActive() {
+		AudioManager manager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+		return manager.getMode() == AudioManager.MODE_IN_CALL;
+	}
+
 	AlarmList.OnAlarmListener moAlarmListener = new AlarmList.OnAlarmListener() {
 		public void onAlarm(String asName) {
 			if ("offline".equals(asName)) {
-				enableAirplaneMode();
+				if (!isCallActive())
+					enableAirplaneMode();
 				updateAlarmWithinOneDay(moCalOffline, "offline", moCalOffline.get(Calendar.HOUR_OF_DAY),
 						moCalOffline.get(Calendar.MINUTE));
 			} else if ("online".equals(asName)) {
